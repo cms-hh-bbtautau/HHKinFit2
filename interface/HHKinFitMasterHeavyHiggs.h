@@ -122,6 +122,9 @@ class HHKinFitMasterHeavyHiggs{
 
   int m_loopsNeeded;
   int m_bestMethodFlag;
+
+  int verbosity;
+
 private:
   double GetPFBJetRes(double eta, double et);
 

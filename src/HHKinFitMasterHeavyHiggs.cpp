@@ -55,6 +55,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
                                                               TLorentzVector const&  heavyhiggsgen)
   :m_MET_COV(TMatrixD(4,4)), m_bjet1_COV(TMatrixD(4,4)), m_bjet2_COV(TMatrixD(4,4))
 {
+  verbosity = 1;
   m_bjet1 = HHLorentzVector(bjet1.Px(), bjet1.Py(), 
 			    bjet1.Pz(), bjet1.E());
   m_bjet2 = HHLorentzVector(bjet2.Px(), bjet2.Py(), 
@@ -277,9 +278,11 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     }
     catch(HHLimitSettingException const& e)
     {
-      std::cout << "Exception while setting tau limits:" << std::endl;
-      std::cout << e.what() << std::endl;
-      std::cout << "Tau energies are not compatible with invariant mass constraint." << std::endl;
+      if(verbosity > 0) {
+          std::cout << "Exception while setting tau limits:" << std::endl;
+          std::cout << e.what() << std::endl;
+          std::cout << "Tau energies are not compatible with invariant mass constraint." << std::endl;
+      }
 
       m_map_chi2[m_hypos[i]] = -pow(10,10);
       m_map_prob[m_hypos[i]] = -pow(10,10);
@@ -296,11 +299,13 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     }
     catch(HHLimitSettingException const& e)
     {
-      std::cout << "Exception while setting b-jet limits" << std::endl;
-      std::cout << e.what() << std::endl;
-      std::cout << "Bjet energies are not compatible with invariant mass constraint." << std::endl;
-      std::cout << "B1 Momentum: " << m_bjet1.P() << std::endl;
-      std::cout << "B2 Momentum: " << m_bjet2.P() << std::endl;
+      if(verbosity > 0) {
+          std::cout << "Exception while setting b-jet limits" << std::endl;
+          std::cout << e.what() << std::endl;
+          std::cout << "Bjet energies are not compatible with invariant mass constraint." << std::endl;
+          std::cout << "B1 Momentum: " << m_bjet1.P() << std::endl;
+          std::cout << "B2 Momentum: " << m_bjet2.P() << std::endl;
+      }
 
       m_map_chi2[m_hypos[i]] = -pow(10,10);
       m_map_prob[m_hypos[i]] = -pow(10,10);
@@ -408,7 +413,8 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     }
     catch(HHLimitSettingException const& e)
     {
-      std::cout << e.what() << std::endl;
+      if(verbosity > 0)
+        std::cout << e.what() << std::endl;
       m_map_chi2[m_hypos[i]] = -pow(10,10);
       m_map_prob[m_hypos[i]] = -pow(10,10);
       m_bestHypo = HHFitHypothesisHeavyHiggs(-1,-1);

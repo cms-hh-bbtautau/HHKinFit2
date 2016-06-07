@@ -100,7 +100,7 @@ double HHKinFit2::HHFitObjectEConstM::calculateEConstrainedToMinv(double m, HHLo
     std::cout << "cp:     " << cp << std::endl;
     std::cout << "M2c:    " << M2c << std::endl;
       
-    std::cout << "sqrt^2: " <<  pow(b,2)-4*a*c << std::endl;
+   // std::cout << "sqrt^2: " <<  pow(b,2)-4*a*c << std::endl;
     throw(HHEnergyConstraintException(msg.str()));
   }
   return E2new;

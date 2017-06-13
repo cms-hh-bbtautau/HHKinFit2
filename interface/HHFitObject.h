@@ -18,7 +18,7 @@ class HHFitObject {
  public:
   HHFitObject();
   HHFitObject(HHLorentzVector const initial4vector);
-  virtual ~HHFitObject(){};
+  virtual ~HHFitObject(){}
 
   virtual HHLorentzVector getInitial4Vector() const;
   virtual HHLorentzVector getFit4Vector() const;

@@ -92,11 +92,11 @@ class HHKinFitMasterHeavyHiggs{
   TLorentzVector getFittedBJet2(int mh1 = 125, int mh2 = 125);
     
   //For Gen Studies to check smearing
-  TLorentzVector getUnfittedBJet1(){return(m_bjet1);};
-  TLorentzVector getUnfittedBJet2(){return(m_bjet2);};
+  TLorentzVector getUnfittedBJet1(){return(m_bjet1);}
+  TLorentzVector getUnfittedBJet2(){return(m_bjet2);}
   
-  double getBJet1Resolution(){return m_sigma_bjet1;};
-  double getBJet2Resolution(){return m_sigma_bjet2;};
+  double getBJet1Resolution(){return m_sigma_bjet1;}
+  double getBJet2Resolution(){return m_sigma_bjet2;}
 
   //DEPRECATED/////////////////////////////////////////////////////////
   //only here for backwards compatibility

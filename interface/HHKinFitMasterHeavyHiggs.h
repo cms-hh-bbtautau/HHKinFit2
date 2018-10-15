@@ -104,9 +104,9 @@ class HHKinFitMasterHeavyHiggs{
                            const TLorentzVector* bjet2,
                            const TLorentzVector* tauvis1,
                            const TLorentzVector* tauvis2,
-                           const TLorentzVector* met = 0, TMatrixD met_cov = TMatrixD(4,4), 
+                           const TLorentzVector* met = nullptr, TMatrixD met_cov = TMatrixD(4,4), 
                            double sigmaEbjet1 = -1.0, double sigmaEbjet2 = -1.0,
-                           bool istruth=false, TLorentzVector* heavyhiggsgen=0);
+                           bool istruth=false, TLorentzVector* heavyhiggsgen = nullptr);
   void doFit();
   HHFitHypothesisHeavyHiggs getLowestChi2Hypothesis();
   void setAdvancedBalance(const TLorentzVector* met, TMatrixD met_cov);

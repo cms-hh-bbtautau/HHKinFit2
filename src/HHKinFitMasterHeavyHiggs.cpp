@@ -43,28 +43,39 @@
 #include <iterator>
 #include <sstream>
 
-HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector const& bjet1, 
-                                                              TLorentzVector const& bjet2, 
+namespace {
+    double roundToNdigits(double x, int n = 3)
+    {
+        if(x == 0.)
+            return 0.;
+        const int p = std::min<int>(n, n - std::ceil(std::log10(std::abs(x))));
+        const double scale = std::pow(10., p);
+        return std::floor(x * scale + 0.5) / scale;
+    }
+}
+
+HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector const& bjet1,
+                                                              TLorentzVector const& bjet2,
                                                               TLorentzVector const& tauvis1,
                                                               TLorentzVector const& tauvis2,
-                                                              TVector2 const& met, 
-                                                              TMatrixD const& met_cov, 
+                                                              TVector2 const& met,
+                                                              TMatrixD const& met_cov,
                                                               double sigmaEbjet1,
                                                               double sigmaEbjet2,
-                                                              bool istruth, 
+                                                              bool istruth,
                                                               TLorentzVector const&  heavyhiggsgen)
   :m_MET_COV(TMatrixD(4,4)), m_bjet1_COV(TMatrixD(4,4)), m_bjet2_COV(TMatrixD(4,4))
 {
-  verbosity = 1;
-  m_bjet1 = HHLorentzVector(bjet1.Px(), bjet1.Py(), 
-			    bjet1.Pz(), bjet1.E());
-  m_bjet2 = HHLorentzVector(bjet2.Px(), bjet2.Py(), 
-			    bjet2.Pz(), bjet2.E());
-  m_tauvis1 = HHLorentzVector(tauvis1.Px(), tauvis1.Py(), 
-			      tauvis1.Pz(), tauvis1.E());  
-  m_tauvis2 = HHLorentzVector(tauvis2.Px(), tauvis2.Py(), 
-			      tauvis2.Pz(), tauvis2.E());
-  
+  verbosity = 0;
+  m_bjet1 = HHLorentzVector(roundToNdigits(bjet1.Px()), roundToNdigits(bjet1.Py()),
+                            roundToNdigits(bjet1.Pz()), roundToNdigits(bjet1.E()));
+  m_bjet2 = HHLorentzVector(roundToNdigits(bjet2.Px()), roundToNdigits(bjet2.Py()),
+                            roundToNdigits(bjet2.Pz()), roundToNdigits(bjet2.E()));
+  m_tauvis1 = HHLorentzVector(roundToNdigits(tauvis1.Px()), roundToNdigits(tauvis1.Py()),
+                              roundToNdigits(tauvis1.Pz()), roundToNdigits(tauvis1.E()));
+  m_tauvis2 = HHLorentzVector(roundToNdigits(tauvis2.Px()), roundToNdigits(tauvis2.Py()),
+                              roundToNdigits(tauvis2.Pz()), roundToNdigits(tauvis2.E()));
+
   m_tauvis1.SetMkeepE(1.77682);
   m_tauvis2.SetMkeepE(1.77682);
 
@@ -72,25 +83,25 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
   m_loopsNeeded = 0;
   m_useAdveancedBJetChi2 = false;
 
-  m_MET = TVector2(met.Px(), met.Py());
-  
-  m_MET_COV(0,0) = met_cov(0,0);
-  m_MET_COV(1,0) = met_cov(1,0);
-  m_MET_COV(0,1) = met_cov(0,1);
-  m_MET_COV(1,1) = met_cov(1,1);
+  m_MET = TVector2(roundToNdigits(met.Px()), roundToNdigits(met.Py()));
+
+  m_MET_COV(0,0) = roundToNdigits(met_cov(0,0));
+  m_MET_COV(1,0) = roundToNdigits(met_cov(1,0));
+  m_MET_COV(0,1) = roundToNdigits(met_cov(0,1));
+  m_MET_COV(1,1) = roundToNdigits(met_cov(1,1));
 
   if(sigmaEbjet1 >= 0.0)
   {
-    m_sigma_bjet1 = sigmaEbjet1;
+    m_sigma_bjet1 = roundToNdigits(sigmaEbjet1);
   }
   else
   {
     m_sigma_bjet1 = GetPFBJetRes(m_bjet1.Eta(), m_bjet1.Et());
   }
-  
+
   if(sigmaEbjet2 >= 0.0)
   {
-    m_sigma_bjet2 = sigmaEbjet2;
+    m_sigma_bjet2 = roundToNdigits(sigmaEbjet2);
   }
   else
   {
@@ -106,7 +117,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
     Double_t bjet1_E  = r.Gaus(m_bjet1.E(), m_sigma_bjet1);
     Double_t bjet1_P  = sqrt(pow(bjet1_E,2) - pow(m_bjet1.M(),2));
     Double_t bjet1_Pt = sin(m_bjet1.Theta())*bjet1_P;
-       
+
     double b1Px_beforeSmear = m_bjet1.Px();
 
     // NOT NEEDED ANYMORE. COV Matr. is calculated in HHFitObjectE
@@ -116,16 +127,16 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
     Double_t bjet1_dpx = cos(m_bjet1.Phi())*bjet1_dpt;
     Double_t bjet1_dpy = sin(m_bjet1.Phi())*bjet1_dpt;
 
-    bjet1Cov(0,0) = pow(bjet1_dpx,2);                           
+    bjet1Cov(0,0) = pow(bjet1_dpx,2);
     bjet1Cov(0,1) = bjet1_dpx * bjet1_dpy;
-    bjet1Cov(1,0) = bjet1_dpx * bjet1_dpy; 
+    bjet1Cov(1,0) = bjet1_dpx * bjet1_dpy;
     bjet1Cov(1,1) = pow(bjet1_dpy,2);
     bjet1Cov(3,3) = m_sigma_bjet1*m_sigma_bjet1;
-    
+
     m_bjet1.SetPtEtaPhiE(bjet1_Pt, m_bjet1.Eta(), m_bjet1.Phi(), bjet1_E);
-    
+
     //m_bjet1_COV = bjet1Cov;
-    
+
     double b1Px_afterSmear = m_bjet1.Px();
     b1Px_standardDevs = (b1Px_beforeSmear - b1Px_afterSmear)/bjet1_dpx;
 
@@ -133,20 +144,20 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
     Double_t bjet2_P  = sqrt(pow(bjet2_E,2) - pow(m_bjet2.M(),2));
     Double_t bjet2_Pt = sin(m_bjet2.Theta())*bjet2_P;
 
-    
+
     TMatrixD bjet2Cov(4,4);
 
-    Double_t bjet2_dpt = sin(m_bjet2.Theta())*m_bjet2.E()/m_bjet2.P()*m_sigma_bjet2;  
+    Double_t bjet2_dpt = sin(m_bjet2.Theta())*m_bjet2.E()/m_bjet2.P()*m_sigma_bjet2;
     Double_t bjet2_dpx = cos(m_bjet2.Phi())*bjet2_dpt;
     Double_t bjet2_dpy = sin(m_bjet2.Phi())*bjet2_dpt;
 
-    bjet2Cov(0,0) = pow(bjet2_dpx,2); 
+    bjet2Cov(0,0) = pow(bjet2_dpx,2);
     bjet2Cov(0,1) = bjet2_dpx * bjet2_dpy;
     bjet2Cov(1,0) = bjet2_dpx * bjet2_dpy;
     bjet2Cov(1,1) = pow(bjet2_dpy,2);
     bjet2Cov(3,3) = m_sigma_bjet2*m_sigma_bjet2;
-    
-    
+
+
     m_bjet2.SetPtEtaPhiE(bjet2_Pt, m_bjet2.Eta(), m_bjet2.Phi(), bjet2_E);
     //m_bjet2_COV = bjet2Cov;
     */
@@ -180,7 +191,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
 
     Double_t bjet1_E  = eTemp;
     Double_t bjet1_P  = sqrt(pow(bjet1_E,2) - pow(m_bjet1.M(),2));
-    Double_t bjet1_Pt = sin(m_bjet1.Theta())*bjet1_P;    
+    Double_t bjet1_Pt = sin(m_bjet1.Theta())*bjet1_P;
     m_bjet1.SetPtEtaPhiE(bjet1_Pt, m_bjet1.Eta(), m_bjet1.Phi(), bjet1_E);
     randomSmear = crystalBall->GetRandom();
     if(randomSmear < 0.1)
@@ -215,12 +226,12 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
     TVector2 tauVis1Vec2 = TVector2(m_tauvis1.Px(), m_tauvis1.Py());
     TVector2 tauVis2Vec2 = TVector2(m_tauvis2.Px(), m_tauvis2.Py());
 
-    m_MET = recoilVec2 - b1Vec2 - b2Vec2 - tauVis1Vec2 - tauVis2Vec2; 
+    m_MET = recoilVec2 - b1Vec2 - b2Vec2 - tauVis1Vec2 - tauVis2Vec2;
     smearedMET = m_MET;
 
     //m_MET_COV = recoil_COV + bjet1Cov + bjet2Cov;
     m_MET_COV = recoil_COV;
-  }  
+  }
 }
 
 
@@ -236,11 +247,11 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
   {
     addHypo(125, 125);
   }
-  
+
   //TCanvas* c1 = new TCanvas();
 
   for(unsigned int i = 0; i < m_hypos.size(); ++i)
-  { 
+  {
     HHFitObjectE* tau1Fit = new HHFitObjectEConstM(m_tauvis1);
     HHFitObjectE* tau2Fit = new HHFitObjectEConstM(m_tauvis2);
 
@@ -251,26 +262,26 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
 
     HHLorentzVector tau1min = m_tauvis1;
     tau1min.SetEkeepM(0.9*m_tauvis1.E());
-      
+
     HHLorentzVector tau2min = m_tauvis2;
     tau2min.SetEkeepM(0.9*m_tauvis2.E());
 
     HHFitObjectE* b1Fit = new HHFitObjectEConstBeta(m_bjet1);
     HHFitObjectE* b2Fit = new HHFitObjectEConstBeta(m_bjet2);
-  
+
     //prepare MET object
     HHFitObjectMET* metFit = new HHFitObjectMET(m_MET);
 
     //prepare composite object: Higgs
-    HHFitObject* heavyHiggs  = new HHFitObjectComposite(tau1Fit, tau2Fit, 
+    HHFitObject* heavyHiggs  = new HHFitObjectComposite(tau1Fit, tau2Fit,
 							b1Fit, b2Fit,
 							metFit);
-    HHFitObject* higgs1  = new HHFitObjectComposite(tau1Fit, tau2Fit);  
+    HHFitObject* higgs1  = new HHFitObjectComposite(tau1Fit, tau2Fit);
     HHFitObject* higgs2  = new HHFitObjectComposite(b1Fit, b2Fit);
 
     int mh1 = m_hypos[i].first;
     int mh2 = m_hypos[i].second;
-  
+
     try
     {
       tau1Fit->setFitLimitsE(tau1min,mh1,tau2min);
@@ -314,8 +325,8 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       m_map_convergence[m_hypos[i]] = -2;
       continue;
     }
-    
-    
+
+
     if(!m_useAdveancedBJetChi2)
     {
       if(fabs(m_bjet1_COV(0,0)) < 0.001)
@@ -327,12 +338,12 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       }
       else
       {
-	std::cout << "Cov MATRIX set manually for ToyMC study." << std::endl;      
+	std::cout << "Cov MATRIX set manually for ToyMC study." << std::endl;
 	b1Fit->setCovMatrix(m_bjet1_COV);
 	b2Fit->setCovMatrix(m_bjet2_COV);
       }
     }
-    
+
 
     metFit->setCovMatrix(m_MET_COV);
     heavyHiggs->setCovMatrix(m_MET_COV);// - m_bjet1_COV - m_bjet2_COV);
@@ -340,7 +351,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     //prepare constraints
     HHFitConstraint* c_invmh1 = new HHFitConstraintEHardM(tau1Fit, tau2Fit, mh1);
     HHFitConstraint* c_invmh2 = new HHFitConstraintEHardM(b1Fit, b2Fit, mh2);
-    
+
 
     HHFitConstraint* c_b1;
     HHFitConstraint* c_b2;
@@ -351,16 +362,16 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     }
     else
     {
-      c_b1 = new HHFitConstraint4Vector(b1Fit, false, false, 
+      c_b1 = new HHFitConstraint4Vector(b1Fit, false, false,
 					false, true);
-      c_b2 = new HHFitConstraint4Vector(b2Fit, false, false, 
+      c_b2 = new HHFitConstraint4Vector(b2Fit, false, false,
 					false, true);
     }
 //   HHFitConstraint* c_b1 = new HHFitConstraint4VectorBJet(b1Fit, 2.06421, 99.92,
 //							   0.17, 1.15, 0.466, 1.608);
 //    HHFitConstraint* c_b2 = new HHFitConstraint4VectorBJet(b2Fit, 2.06421, 99.92,
 //							   0.17, 1.15, 0.466, 1.608);
-    HHFitConstraint* c_balance = new HHFitConstraint4Vector(heavyHiggs, true, true, 
+    HHFitConstraint* c_balance = new HHFitConstraint4Vector(heavyHiggs, true, true,
 							    false, false);
 
     //fit
@@ -369,11 +380,11 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
 
     tau1Fit->setInitDirection(1.0);
     tau1Fit->setInitPrecision(0.1);
-    tau1Fit->setInitStepWidth(0.1*(tau1Fit->getUpperFitLimitE() - 
+    tau1Fit->setInitStepWidth(0.1*(tau1Fit->getUpperFitLimitE() -
 				   tau1Fit->getLowerFitLimitE()));
 
     b1Fit->setInitPrecision(0.1);
-    b1Fit->setInitStepWidth(0.02*(b1Fit->getUpperFitLimitE() - 
+    b1Fit->setInitStepWidth(0.02*(b1Fit->getUpperFitLimitE() -
 				  b1Fit->getLowerFitLimitE()));
     b1Fit->setInitStart( 0.9*b1Fit->getInitial4Vector().E());
     b1Fit->setInitDirection(-1.0);
@@ -392,7 +403,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     int steps[2];
     steps[0] = 30;
     steps[1] = 30;
-    
+
     double mins[2];
     double maxs[2];
     //END For Chi2Map
@@ -454,7 +465,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
 
     //--NegTauUp
 //      b1Fit->setInitStart( 0.9*b1Fit->getInitial4Vector().E());
-    tau1Fit->setInitStart((tau1Fit->getUpperFitLimitE() - 
+    tau1Fit->setInitStart((tau1Fit->getUpperFitLimitE() -
 			   tau1Fit->getLowerFitLimitE())/2.0);
     try
     {
@@ -543,7 +554,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       //b1PosTauDownFit = b1Fit->getFit4Vector().E();
       //tau1PosTauDownFit = tau1Fit->getFit4Vector().E();
     }
-       
+
     bool improvementDetected = false;
     if(fabs(chi2NegTauDown - chi2Min) > 0.1)
     {
@@ -558,10 +569,10 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       improvementDetected = true;
     }
 
-    if(improvementDetected) 
+    if(improvementDetected)
     {
       /*
-	std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" 
+	std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	<< std::endl;
 	std::cout << "Difference in B-Fit directions detected: " << std::endl;
 	std::cout << "Chi2 PosTauUp: " << chi2PosTauUp << std::endl
@@ -578,7 +589,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       {
 	maxs[0] = b1NegTauDownFit;
       }
-      
+
       if(doTauUpStart)
       {
 	if(b1NegTauUpFit < mins[0])
@@ -589,7 +600,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
 	{
 	  maxs[0] = b1NegTauUpFit;
 	}
-      
+
 	if(b1PosTauUpFit < mins[0])
 	{
 	  mins[0] = b1PosTauUpFit;
@@ -609,7 +620,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       {
 	maxs[1] = tau1NegTauDownFit;
       }
-      
+
       if(doTauUpStart)
       {
 	if(tau1NegTauUpFit < mins[1])
@@ -673,13 +684,13 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       stream << b1NegTauDownFit;
       stream >> b1NegTauDown;
       stream.clear();
-      
+
       if(doTauUpStart)
       {
 	stream << tau1PosTauUpFit;
 	stream >> tau1PosTauUp;
 	stream.clear();
-	
+
 	stream << tau1NegTauUpFit;
 	stream >> tau1NegTauUp;
 	stream.clear();
@@ -696,13 +707,13 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       {
 	c1->SaveAs("PosUp" + b1PosTauUp + "-" + tau1PosTauUp +
 		   "NegUp" + b1NegTauUp + "-" + tau1NegTauUp +
-		   "PosDown" + b1PosTauDown + "-" + tau1PosTauDown + 
+		   "PosDown" + b1PosTauDown + "-" + tau1PosTauDown +
 		   "NegDown" + b1NegTauDown + "-" + tau1NegTauDown +
 		   ".pdf");
       }
       else
       {
-	c1->SaveAs("PosDown" + b1PosTauDown + "-" + tau1PosTauDown + 
+	c1->SaveAs("PosDown" + b1PosTauDown + "-" + tau1PosTauDown +
 		   "NegDown" + b1NegTauDown + "-" + tau1NegTauDown +
 		   ".pdf");
       }
@@ -717,35 +728,35 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       //5 = chi2NegTauUp + chi2NegTauDown
       //6 = chi2NegTauUp + chi2PosTauDown
       //7 = All, should not happen
-      
+
       if(fabs(chi2NegTauDown - chi2Min) <= 0.1)
       {
-	m_bestMethodFlag = m_bestMethodFlag | (1 << 0); 
+	m_bestMethodFlag = m_bestMethodFlag | (1 << 0);
 	tau1Fit->setInitStart(tau1Fit->getUpperFitLimitE());
 	fitObject->fit();
 	hasRerun = true;
       }
       if(fabs(chi2PosTauDown - chi2Min) <= 0.1)
       {
-	m_bestMethodFlag = m_bestMethodFlag | (1 << 1); 
+	m_bestMethodFlag = m_bestMethodFlag | (1 << 1);
 	hasRerun = true; //No need to rerun as this was the last config to run
       }
-   
+
       if(fabs(chi2NegTauUp - chi2Min) <= 0.1)
       {
-	m_bestMethodFlag = m_bestMethodFlag | (1 << 2); 
+	m_bestMethodFlag = m_bestMethodFlag | (1 << 2);
 	if(!hasRerun)
 	{
-	  tau1Fit->setInitStart((tau1Fit->getUpperFitLimitE() - 
+	  tau1Fit->setInitStart((tau1Fit->getUpperFitLimitE() -
 				 tau1Fit->getLowerFitLimitE())/2.0);
 	  fitObject->fit();
 	  hasRerun = true;
 	}
       }
-      
+
       if(!hasRerun)
       {
-	std::cout << "--------ALARM! ALARM! SOMETHING HAS GONE HORRIBLY WRONG!-------" 
+	std::cout << "--------ALARM! ALARM! SOMETHING HAS GONE HORRIBLY WRONG!-------"
 		  << std::endl;
       }
     }
@@ -764,7 +775,7 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       mins[1] = 0.9*tau1Fit->getFit4Vector().E();
       maxs[0] = 1.1*b1Fit->getFit4Vector().E();
       maxs[1] = 1.1*tau1Fit->getFit4Vector().E();
- 
+
       TString b1Point;
       TString tau1Point;
       std::stringstream stream;
@@ -788,8 +799,8 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       initialHH = (TLorentzVector)heavyHiggs->getInitial4Vector();
       finalHH = (TLorentzVector)heavyHiggs->getFit4Vector();
 
-      m_map_convergence[m_hypos[i]] = fitObject->getConvergence();    
-    
+      m_map_convergence[m_hypos[i]] = fitObject->getConvergence();
+
       double chi2 = fitObject->getChi2();
       m_map_chi2[m_hypos[i]] = chi2;
       m_map_prob[m_hypos[i]] = TMath::Prob(chi2, 2);
@@ -800,12 +811,12 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
 	m_bestHypo = m_hypos[i];
 	m_bestChi2 = chi2;
       }
-    
+
       m_map_mH[m_hypos[i]] = heavyHiggs->getFit4Vector().M();
       m_map_chi2BJet1[m_hypos[i]] = c_b1->getChi2();
       m_map_chi2BJet2[m_hypos[i]] = c_b2->getChi2();
       m_map_chi2Balance[m_hypos[i]] = c_balance->getChi2();
-    
+
       TLorentzVector fittedTau1 =  ( (TLorentzVector)tau1Fit->getFit4Vector()  );
       m_map_fittedTau1[m_hypos[i]] = fittedTau1;
       TLorentzVector fittedTau2 =  ( (TLorentzVector)tau2Fit->getFit4Vector()  );
@@ -821,9 +832,9 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     delete c_b1;
     delete c_b2;
     delete c_balance;
-    
+
     delete fitObject;
-   
+
     delete tau1Fit;
     delete tau2Fit;
     delete b1Fit;
@@ -856,29 +867,29 @@ HHKinFit2::HHFitHypothesisHeavyHiggs HHKinFit2::HHKinFitMasterHeavyHiggs::getBes
   return(m_bestHypo);
 }
 
-HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVector* bjet1, 
-                                                              const TLorentzVector* bjet2, 
+HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVector* bjet1,
+                                                              const TLorentzVector* bjet2,
                                                               const TLorentzVector* tauvis1,
                                                               const TLorentzVector* tauvis2,
-                                                              const TLorentzVector* met, 
-                                                              TMatrixD met_cov, 
+                                                              const TLorentzVector* met,
+                                                              TMatrixD met_cov,
                                                               double sigmaEbjet1,
                                                               double sigmaEbjet2,
-                                                              bool istruth, 
+                                                              bool istruth,
                                                               TLorentzVector* heavyhiggsgen)
   :m_MET_COV(TMatrixD(4,4)), m_bjet1_COV(TMatrixD(4,4)), m_bjet2_COV(TMatrixD(4,4))
-					  
+
 {
   std::cout << "DEPRECATED! Please use the new Constructor taking references instead of pointers." << std::endl;
-  m_bjet1 = HHLorentzVector(bjet1->Px(), bjet1->Py(), 
+  m_bjet1 = HHLorentzVector(bjet1->Px(), bjet1->Py(),
 			    bjet1->Pz(), bjet1->E());
-  m_bjet2 = HHLorentzVector(bjet2->Px(), bjet2->Py(), 
+  m_bjet2 = HHLorentzVector(bjet2->Px(), bjet2->Py(),
 			    bjet2->Pz(), bjet2->E());
-  m_tauvis1 = HHLorentzVector(tauvis1->Px(), tauvis1->Py(), 
-			      tauvis1->Pz(), tauvis1->E());  
-  m_tauvis2 = HHLorentzVector(tauvis2->Px(), tauvis2->Py(), 
+  m_tauvis1 = HHLorentzVector(tauvis1->Px(), tauvis1->Py(),
+			      tauvis1->Pz(), tauvis1->E());
+  m_tauvis2 = HHLorentzVector(tauvis2->Px(), tauvis2->Py(),
 			      tauvis2->Pz(), tauvis2->E());
- 
+
   m_tauvis1.SetMkeepE(1.77682);
   m_tauvis2.SetMkeepE(1.77682);
 
@@ -903,7 +914,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVect
   {
     m_sigma_bjet1 = GetPFBJetRes(m_bjet1.Eta(), m_bjet1.Et());
   }
-  
+
   if(sigmaEbjet2 >= 0.0)
   {
     m_sigma_bjet2 = sigmaEbjet2;
@@ -922,7 +933,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVect
     Double_t bjet1_E  = r.Gaus(m_bjet1.E(), m_sigma_bjet1);
     Double_t bjet1_P  = sqrt(pow(bjet1_E,2) - pow(m_bjet1.M(),2));
     Double_t bjet1_Pt = sin(m_bjet1.Theta())*bjet1_P;
-       
+
     double b1Px_beforeSmear = m_bjet1.Px();
 
     // NOT NEEDED ANYMORE. COV Matr. is calculated in HHFitObjectE
@@ -932,16 +943,16 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVect
     Double_t bjet1_dpx = cos(m_bjet1.Phi())*bjet1_dpt;
     Double_t bjet1_dpy = sin(m_bjet1.Phi())*bjet1_dpt;
 
-    bjet1Cov(0,0) = pow(bjet1_dpx,2);                           
+    bjet1Cov(0,0) = pow(bjet1_dpx,2);
     bjet1Cov(0,1) = bjet1_dpx * bjet1_dpy;
-    bjet1Cov(1,0) = bjet1_dpx * bjet1_dpy; 
+    bjet1Cov(1,0) = bjet1_dpx * bjet1_dpy;
     bjet1Cov(1,1) = pow(bjet1_dpy,2);
     bjet1Cov(3,3) = m_sigma_bjet1*m_sigma_bjet1;
-    
+
     m_bjet1.SetPtEtaPhiE(bjet1_Pt, m_bjet1.Eta(), m_bjet1.Phi(), bjet1_E);
-    
+
     //m_bjet1_COV = bjet1Cov;
-    
+
     double b1Px_afterSmear = m_bjet1.Px();
     b1Px_standardDevs = (b1Px_beforeSmear - b1Px_afterSmear)/bjet1_dpx;
 
@@ -949,20 +960,20 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVect
     Double_t bjet2_P  = sqrt(pow(bjet2_E,2) - pow(m_bjet2.M(),2));
     Double_t bjet2_Pt = sin(m_bjet2.Theta())*bjet2_P;
 
-    
+
     TMatrixD bjet2Cov(4,4);
 
-    Double_t bjet2_dpt = sin(m_bjet2.Theta())*m_bjet2.E()/m_bjet2.P()*m_sigma_bjet2;  
+    Double_t bjet2_dpt = sin(m_bjet2.Theta())*m_bjet2.E()/m_bjet2.P()*m_sigma_bjet2;
     Double_t bjet2_dpx = cos(m_bjet2.Phi())*bjet2_dpt;
     Double_t bjet2_dpy = sin(m_bjet2.Phi())*bjet2_dpt;
 
-    bjet2Cov(0,0) = pow(bjet2_dpx,2); 
+    bjet2Cov(0,0) = pow(bjet2_dpx,2);
     bjet2Cov(0,1) = bjet2_dpx * bjet2_dpy;
     bjet2Cov(1,0) = bjet2_dpx * bjet2_dpy;
     bjet2Cov(1,1) = pow(bjet2_dpy,2);
     bjet2Cov(3,3) = m_sigma_bjet2*m_sigma_bjet2;
-    
-    
+
+
     m_bjet2.SetPtEtaPhiE(bjet2_Pt, m_bjet2.Eta(), m_bjet2.Phi(), bjet2_E);
     //m_bjet2_COV = bjet2Cov;
     */
@@ -996,7 +1007,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVect
 
     Double_t bjet1_E  = eTemp;
     Double_t bjet1_P  = sqrt(pow(bjet1_E,2) - pow(m_bjet1.M(),2));
-    Double_t bjet1_Pt = sin(m_bjet1.Theta())*bjet1_P;    
+    Double_t bjet1_Pt = sin(m_bjet1.Theta())*bjet1_P;
     m_bjet1.SetPtEtaPhiE(bjet1_Pt, m_bjet1.Eta(), m_bjet1.Phi(), bjet1_E);
     randomSmear = crystalBall->GetRandom();
     if(randomSmear < 0.1)
@@ -1031,12 +1042,12 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(const TLorentzVect
     TVector2 tauVis1Vec2 = TVector2(m_tauvis1.Px(), m_tauvis1.Py());
     TVector2 tauVis2Vec2 = TVector2(m_tauvis2.Px(), m_tauvis2.Py());
 
-    m_MET = recoilVec2 - b1Vec2 - b2Vec2 - tauVis1Vec2 - tauVis2Vec2; 
+    m_MET = recoilVec2 - b1Vec2 - b2Vec2 - tauVis1Vec2 - tauVis2Vec2;
     smearedMET = m_MET;
 
     //m_MET_COV = recoil_COV + bjet1Cov + bjet2Cov;
     m_MET_COV = recoil_COV;
-  }  
+  }
 }
 
 HHKinFit2::HHFitHypothesisHeavyHiggs HHKinFit2::HHKinFitMasterHeavyHiggs::getLowestChi2Hypothesis(){
@@ -1056,7 +1067,7 @@ double HHKinFit2::HHKinFitMasterHeavyHiggs::getChi2(int mh1, int mh2){
   return(m_map_chi2[hypo]);
 }
 
-  
+
 double HHKinFit2::HHKinFitMasterHeavyHiggs::getChi2BJet1(int mh1, int mh2){
   HHFitHypothesisHeavyHiggs hypo(mh1, mh2);
   return(m_map_chi2BJet1[hypo]);
@@ -1068,18 +1079,18 @@ double HHKinFit2::HHKinFitMasterHeavyHiggs::getChi2BJet2(int mh1, int mh2){
   HHFitHypothesisHeavyHiggs hypo(mh1, mh2);
   return(m_map_chi2BJet2[hypo]);
 }
-    
+
 
 double HHKinFit2::HHKinFitMasterHeavyHiggs::getChi2Balance(int mh1, int mh2){
   HHFitHypothesisHeavyHiggs hypo(mh1, mh2);
   return(m_map_chi2Balance[hypo]);
 }
-  
+
 double HHKinFit2::HHKinFitMasterHeavyHiggs::getFitProb(int mh1, int mh2){
   HHFitHypothesisHeavyHiggs hypo(mh1, mh2);
   return( m_map_prob[hypo]);
 }
-  
+
 double HHKinFit2::HHKinFitMasterHeavyHiggs::getMH(int mh1, int mh2){
   HHFitHypothesisHeavyHiggs hypo(mh1, mh2);
   return(m_map_mH[hypo]);
@@ -1106,14 +1117,14 @@ TLorentzVector HHKinFit2::HHKinFitMasterHeavyHiggs::getFittedBJet1(int mh1, int 
   HHFitHypothesisHeavyHiggs hypo(mh1, mh2);
   return(m_map_fittedB1[hypo]);
 }
-  
+
 
 TLorentzVector HHKinFit2::HHKinFitMasterHeavyHiggs::getFittedBJet2(int mh1, int mh2){
   HHFitHypothesisHeavyHiggs hypo(mh1, mh2);
   return(m_map_fittedB2[hypo]);
 }
 
-void HHKinFit2::HHKinFitMasterHeavyHiggs::setAdvancedBalance(const TLorentzVector* met, 
+void HHKinFit2::HHKinFitMasterHeavyHiggs::setAdvancedBalance(const TLorentzVector* met,
                                                              TMatrixD met_cov)
 {
   std::cout << "DEPRECATED! Please hand over MET and the covariance matrix already in the constructor." << std::endl;
@@ -1263,15 +1274,15 @@ double HHKinFit2::HHKinFitMasterHeavyHiggs::GetPFBJetRes(double eta, double et){
 
   return de;
 
-}    
+}
 
-double HHKinFit2::crystBallLikePDF(double x, double alpha, double n, double sigma, 
-				   double mean, double beta, double normalization) 
+double HHKinFit2::crystBallLikePDF(double x, double alpha, double n, double sigma,
+				   double mean, double beta, double normalization)
 {
   if (sigma < 0.)     return 0.;
   double fitVal;
-  double z = (x - mean)/sigma; 
-  //if (alpha < 0) z = -z; 
+  double z = (x - mean)/sigma;
+  //if (alpha < 0) z = -z;
   double abs_alpha = std::abs(alpha);
   double abs_beta = std::abs(beta);
   if (x < 0)

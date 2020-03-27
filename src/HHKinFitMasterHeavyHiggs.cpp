@@ -46,11 +46,31 @@
 namespace {
     double roundToNdigits(double x, int n = 3)
     {
+        if(n <= 0) return x;
         if(x == 0.)
             return 0.;
         const int p = std::min<int>(n, n - std::ceil(std::log10(std::abs(x))));
         const double scale = std::pow(10., p);
         return std::floor(x * scale + 0.5) / scale;
+    }
+
+    HHKinFit2::HHLorentzVector createLVector(const TLorentzVector& v, int n)
+    {
+        if(n <= 0)
+            return HHKinFit2::HHLorentzVector(v.Px(), v.Py(), v.Pz(), v.E());
+        HHKinFit2::HHLorentzVector v_out;
+        v_out.SetPtEtaPhiE(roundToNdigits(v.Pt(), n), roundToNdigits(v.Eta(), n),
+                           roundToNdigits(v.Phi(), n), roundToNdigits(v.E(), n));
+        return v_out;
+    }
+
+    TVector2 createVector2(const TVector2& v, int n)
+    {
+        if(n <= 0)
+            return TVector2(v.Px(), v.Py());
+        TVector2 v_out;
+        v_out.SetMagPhi(roundToNdigits(v.Mod(), n), roundToNdigits(v.Phi(), n));
+        return v_out;
     }
 }
 
@@ -63,18 +83,15 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
                                                               double sigmaEbjet1,
                                                               double sigmaEbjet2,
                                                               bool istruth,
-                                                              TLorentzVector const&  heavyhiggsgen)
+                                                              TLorentzVector const&  heavyhiggsgen,
+                                                              int rounding)
   :m_MET_COV(TMatrixD(4,4)), m_bjet1_COV(TMatrixD(4,4)), m_bjet2_COV(TMatrixD(4,4))
 {
   verbosity = 0;
-  m_bjet1 = HHLorentzVector(roundToNdigits(bjet1.Px()), roundToNdigits(bjet1.Py()),
-                            roundToNdigits(bjet1.Pz()), roundToNdigits(bjet1.E()));
-  m_bjet2 = HHLorentzVector(roundToNdigits(bjet2.Px()), roundToNdigits(bjet2.Py()),
-                            roundToNdigits(bjet2.Pz()), roundToNdigits(bjet2.E()));
-  m_tauvis1 = HHLorentzVector(roundToNdigits(tauvis1.Px()), roundToNdigits(tauvis1.Py()),
-                              roundToNdigits(tauvis1.Pz()), roundToNdigits(tauvis1.E()));
-  m_tauvis2 = HHLorentzVector(roundToNdigits(tauvis2.Px()), roundToNdigits(tauvis2.Py()),
-                              roundToNdigits(tauvis2.Pz()), roundToNdigits(tauvis2.E()));
+  m_bjet1 = createLVector(bjet1, rounding);
+  m_bjet2 = createLVector(bjet2, rounding);
+  m_tauvis1 = createLVector(tauvis1, rounding);
+  m_tauvis2 = createLVector(tauvis2, rounding);
 
   m_tauvis1.SetMkeepE(1.77682);
   m_tauvis2.SetMkeepE(1.77682);
@@ -83,16 +100,16 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
   m_loopsNeeded = 0;
   m_useAdveancedBJetChi2 = false;
 
-  m_MET = TVector2(roundToNdigits(met.Px()), roundToNdigits(met.Py()));
+  m_MET = createVector2(met, rounding);
 
-  m_MET_COV(0,0) = roundToNdigits(met_cov(0,0));
-  m_MET_COV(1,0) = roundToNdigits(met_cov(1,0));
-  m_MET_COV(0,1) = roundToNdigits(met_cov(0,1));
-  m_MET_COV(1,1) = roundToNdigits(met_cov(1,1));
+  m_MET_COV(0,0) = roundToNdigits(met_cov(0,0), rounding);
+  m_MET_COV(1,0) = roundToNdigits(met_cov(1,0), rounding);
+  m_MET_COV(0,1) = roundToNdigits(met_cov(0,1), rounding);
+  m_MET_COV(1,1) = roundToNdigits(met_cov(1,1), rounding);
 
   if(sigmaEbjet1 >= 0.0)
   {
-    m_sigma_bjet1 = roundToNdigits(sigmaEbjet1);
+    m_sigma_bjet1 = roundToNdigits(sigmaEbjet1, rounding);
   }
   else
   {
@@ -101,7 +118,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
 
   if(sigmaEbjet2 >= 0.0)
   {
-    m_sigma_bjet2 = roundToNdigits(sigmaEbjet2);
+    m_sigma_bjet2 = roundToNdigits(sigmaEbjet2, rounding);
   }
   else
   {

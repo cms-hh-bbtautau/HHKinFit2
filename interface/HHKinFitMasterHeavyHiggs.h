@@ -28,14 +28,14 @@ typedef std::map< HHFitHypothesisHeavyHiggs, int >            HHFitResultI;
 typedef std::map< HHFitHypothesisHeavyHiggs, bool >           HHFitResultB;
 typedef std::map< HHFitHypothesisHeavyHiggs, TLorentzVector > HHFitResultTLor;
 
-double crystBallLikePDF(double x, double alpha, double n, double sigma, 
+double crystBallLikePDF(double x, double alpha, double n, double sigma,
 			double mean, double beta, double normalization);
 
 double crystalBallLikePDFROOT(double* x, double *par);
 
 class HHKinFitMasterHeavyHiggs{
   public:
- 
+
   HHKinFitMasterHeavyHiggs(TLorentzVector const& bjet1,
                            TLorentzVector const& bjet2,
                            TLorentzVector const& tauvis1,
@@ -43,8 +43,8 @@ class HHKinFitMasterHeavyHiggs{
                            TVector2 const& met, TMatrixD const& met_cov,
                            double sigmaEbjet1 = -1.0, double sigmaEbjet2 = -1.0,
                            bool istruth=false,
-                           TLorentzVector const& higgsgen=TLorentzVector(0,0,0,0));
-  
+                           TLorentzVector const& higgsgen=TLorentzVector(0,0,0,0), int rounding=-1);
+
   //the main action, runs over all hypotheses and performs the fit
   void fit();
 
@@ -56,7 +56,7 @@ class HHKinFitMasterHeavyHiggs{
   //Getters
   HHFitHypothesisHeavyHiggs getBestHypothesis();
   double getBestChi2();
-  
+
   //Getters for fit results
   double getChi2(HHFitHypothesisHeavyHiggs hypo);
   double getChi2(int mh1 = 125, int mh2 = 125);
@@ -66,13 +66,13 @@ class HHKinFitMasterHeavyHiggs{
 
   double getChi2BJet2(HHFitHypothesisHeavyHiggs hypo);
   double getChi2BJet2(int mh1 = 125, int mh2 = 125);
-    
+
   double getChi2Balance(HHFitHypothesisHeavyHiggs hypo);
   double getChi2Balance(int mh1 = 125, int mh2 = 125);
-  
+
   double getFitProb(HHFitHypothesisHeavyHiggs hypo);
   double getFitProb(int mh1 = 125, int mh2 = 125);
-  
+
   double getMH(HHFitHypothesisHeavyHiggs hypo);
   double getMH(int mh1 = 125, int mh2 = 125);
 
@@ -87,14 +87,14 @@ class HHKinFitMasterHeavyHiggs{
 
   TLorentzVector getFittedBJet1(HHFitHypothesisHeavyHiggs hypo);
   TLorentzVector getFittedBJet1(int mh1 = 125, int mh2 = 125);
-  
+
   TLorentzVector getFittedBJet2(HHFitHypothesisHeavyHiggs hypo);
   TLorentzVector getFittedBJet2(int mh1 = 125, int mh2 = 125);
-    
+
   //For Gen Studies to check smearing
   TLorentzVector getUnfittedBJet1(){return(m_bjet1);}
   TLorentzVector getUnfittedBJet2(){return(m_bjet2);}
-  
+
   double getBJet1Resolution(){return m_sigma_bjet1;}
   double getBJet2Resolution(){return m_sigma_bjet2;}
 
@@ -104,18 +104,18 @@ class HHKinFitMasterHeavyHiggs{
                            const TLorentzVector* bjet2,
                            const TLorentzVector* tauvis1,
                            const TLorentzVector* tauvis2,
-                           const TLorentzVector* met = nullptr, TMatrixD met_cov = TMatrixD(4,4), 
+                           const TLorentzVector* met = nullptr, TMatrixD met_cov = TMatrixD(4,4),
                            double sigmaEbjet1 = -1.0, double sigmaEbjet2 = -1.0,
                            bool istruth=false, TLorentzVector* heavyhiggsgen = nullptr);
   void doFit();
   HHFitHypothesisHeavyHiggs getLowestChi2Hypothesis();
   void setAdvancedBalance(const TLorentzVector* met, TMatrixD met_cov);
   /////////////////////////////////////////////////////////////////////
-  
-  
+
+
   TLorentzVector neutrinos;
   TVector2 smearedMET;
-  
+
   TLorentzVector initialHH;
   TLorentzVector finalHH;
   double b1Px_standardDevs;
@@ -146,7 +146,7 @@ private:
   bool m_useAdveancedBJetChi2;
   //fit result
   HHFitResultI m_map_convergence;
-  
+
   HHFitResultD m_map_chi2;
   HHFitResultD m_map_chi2BJet1;
   HHFitResultD m_map_chi2BJet2;

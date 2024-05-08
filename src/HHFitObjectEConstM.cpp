@@ -25,7 +25,7 @@ HHKinFit2::HHFitObjectEConstM::constrainEtoMinv(double m, HHLorentzVector const&
   if (E < 0)
   {
     std::stringstream msg;
-    msg << "problem in constraining energy to inv. mass in FitObjectEConstM: minv="<< m 
+    msg << "problem in constraining energy to inv. mass in FitObjectEConstM: minv="<< m
 	<< " E(set)="<<E;
     throw(HHEnergyConstraintException(msg.str()));
   }
@@ -61,11 +61,11 @@ double HHKinFit2::HHFitObjectEConstM::calculateEConstrainedToMinv(double m, HHLo
   double cosa = (P1x*P2x+P1y*P2y+P1z*P2z)/(P1*P2);
   double E2new = -1;
 
-  double cp;
-  double dp;
-  double a;
-  double b;
-  double c;
+  double cp = std::numeric_limits<double>::quiet_NaN();
+  double dp = std::numeric_limits<double>::quiet_NaN();
+  double a = std::numeric_limits<double>::quiet_NaN();
+  double b = std::numeric_limits<double>::quiet_NaN();
+  double c = std::numeric_limits<double>::quiet_NaN();
 
   if(cosa==0){
     E2new=C/E1;
@@ -86,7 +86,7 @@ double HHKinFit2::HHFitObjectEConstM::calculateEConstrainedToMinv(double m, HHLo
     msg << "problem in constraining energy to inv. mass in FitObjectEConstM: minv="<<Mc<< " E(set)="<<E2new << " cos(alpha)="<<cosa<<" P1="<<P1<<" P2="<< P2;
     std::cout << "E1:     " << E1 << std::endl;
     std::cout << "P1:     " << P1 << std::endl;
-      
+
     std::cout << "P2:     " << P2 << std::endl;
     std::cout << "E2new:  " << E2new << std::endl;
 
@@ -94,12 +94,12 @@ double HHKinFit2::HHFitObjectEConstM::calculateEConstrainedToMinv(double m, HHLo
     std::cout << "dp:     " << dp << std::endl;
     std::cout << "cosa:   " << cosa << std::endl;
 
-     
+
     std::cout << "b:      " << b << std::endl;
     std::cout << "c:      " << c << std::endl;
     std::cout << "cp:     " << cp << std::endl;
     std::cout << "M2c:    " << M2c << std::endl;
-      
+
    // std::cout << "sqrt^2: " <<  pow(b,2)-4*a*c << std::endl;
     throw(HHEnergyConstraintException(msg.str()));
   }

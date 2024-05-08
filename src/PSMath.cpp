@@ -21,10 +21,10 @@
 //  PSMinverse       invert a symmetric matrix
 //  PSMCholtest      test inversion of symmetric matrix via cholesky LR decomposition
 //  PSMmultiply      multiply two matrices
-//  PSMmultiplyMRRT  multiply triangular matrix R with transpose, 
-//  PSMmultiplyMT    multiply matrix  A = B * B^T 
+//  PSMmultiplyMRRT  multiply triangular matrix R with transpose,
+//  PSMmultiplyMT    multiply matrix  A = B * B^T
 //  PSMRTrianInvert2 invert a triangular R - matrix
-//  PSMRTrianInvert  invert a triangular R - matrix 
+//  PSMRTrianInvert  invert a triangular R - matrix
 //  PSMCholesky      Cholesky decomposition of  M = n*n  symmetric matrix
 //  PSfuncQuadratic  compute multi-dim quadratic function (a,g,H)
 //  PSfitTest           generic test function for fits
@@ -32,51 +32,61 @@
 //  PSfitMinStep        calcuate Newton Step for minimisation
 
 //  PSfitconstrain0Test test function extrapolation to F=constrain
-//  PSfitconstrain0     calculate a1,a2 for constraint F(a^2)=c 
+//  PSfitconstrain0     calculate a1,a2 for constraint F(a^2)=c
 //  PSfitconstrain1     constrain function F(a) with derivative and Hesse
 
 //  PSderivative1       1-dim case of PSderivative,  see documentation there
 //  PSderivative        Tool for numerical calc. of derivative and Hesse matrix
 
 int
-PSMath::PSfit (int iloop, int &iter, int &method, int &mode,
-               Bool_t &noNewtonShifts, int printlevel, int np, double a[],
-               double astart[], double alimit[][2], double aprec[],
-               double daN[], double h[], double aMemory[][5], double chi2,
-               double chi2iter[], double g[], double H[], double Hinv[])
+PSMath::PSfit (int iloop, int &iter, int &method, int &mode, bool &noNewtonShifts, int printlevel, int np,
+    std::vector<double>& a,
+    std::vector<double>& astart,
+    std::vector<std::vector<double>>& alimit,
+    const std::vector<double>& aprec,
+    std::vector<double>& daN,
+    std::vector<double>& h,
+    std::vector<std::vector<double>>& aMemory,
+	  double chi2,
+    std::vector<double>& chi2iter,
+    std::vector<double>& g,
+    std::vector<double>& H,
+    std::vector<double>& Hinv)
 {
   // generic fitter using Newton method and Line Search within parameter limits
-  // iter:     set iter=0 at start of a new fit, 
+  // iter:     set iter=0 at start of a new fit,
   //           iter<0 during construction of numerical derivatives
   //           iter>0 after each iteration
-  // method:   preferred initial fit method: 
-  //           =1 line search in direction of daN[],  
-  //           =2 Newtown in all dimensions 
-  // mode:     mode within method; 
+  // method:   preferred initial fit method:
+  //           =1 line search in direction of daN[],
+  //           =2 Newtown in all dimensions
+  // mode:     mode within method;
   // printlevel: 0: quite mode, 1: one line with fit result
   //             2: full fit result, 3: one line per iteration, 4: more and more
   // np:         number of fit parameters
-  // a[np]:      fit parameters, fill start values at beginning when iloop=0, 
+  // a[np]:      fit parameters, fill start values at beginning when iloop=0,
   //             contains actual fit parameters for chi2 calculation,
   //             will contain final result
   // astart[np]: start values for a[], will not be changed
   // alimit[np]: upper and lower limits for a[]
   // aprec[np]:  precision requested for a[], also minimum value for h[]
-  //             and minimum distance of a[] to alimit[] (needed to calculate derivatives) 
+  //             and minimum distance of a[] to alimit[] (needed to calculate derivatives)
   // daN[]:      step vector from iteration to iteration,
   //             may contain initial search direction if method= line search
   // h[]:        for Newton method: initial step width for calculation of num. derivatives
   // chi2:       must contain function value at input value of a to be minimized
   // chi2iter[]  Function (chi2) with nominal a[], i.e. no shift of a[]
   // g[np]       derivative vector  g[np]
-  // H[np*np]    Hesse matrix,   g[] and H[] are also used as 
+  // H[np*np]    Hesse matrix,   g[] and H[] are also used as
   //                             intermediate storage of chi2
   // Hinv[np*np] Inverse of Hesse matrix
 
   static int icallNewton, iterMemory;
   static double chi2Memory;
-  static double x[4], f[4];
-  static double xx, xlimit[2];
+  static std::vector<double> x(4);
+  static std::vector<double> f(4);
+  static double xx;
+  static std::vector<double> xlimit(2);
   static double xh, daNabs;
   static double epsx = 0.01, epsf = 0.001;
   int convergence;
@@ -134,7 +144,7 @@ PSMath::PSfit (int iloop, int &iter, int &method, int &mode,
       xh = 1.0/PSVnorm (daN, np);        // initial step width for line search
       if (daNabs == 0.)
         return 1;                            //Minimum found at both limits
-      
+
       else {
         PSLineLimit (np, astart, daN, alimit, xlimit);
       }      // limits for line search
@@ -166,7 +176,7 @@ PSMath::PSfit (int iloop, int &iter, int &method, int &mode,
       bool didConverge = true;
 
       for (int ip = 0; ip < np; ip++) { // check for progress w.r.t. previous iteration
-	if (fabs(a[ip] - aMemory[ip][0]) > aprec[ip]) 
+	if (fabs(a[ip] - aMemory[ip][0]) > aprec[ip])
 	{
 	  if(printlevel >=2)
 	    std::cout << "No Convergence as Parameter " << np << " is " << fabs(a[ip] - aMemory[ip][0]) << " away from previous iteration." << std::endl;
@@ -174,7 +184,7 @@ PSMath::PSfit (int iloop, int &iter, int &method, int &mode,
 	  break;
 	}
       }
-      
+
       if(didConverge){
 	convergence = 1;
 	iterMemory = iterMemory + 1;
@@ -277,10 +287,14 @@ PSMath::PSfit (int iloop, int &iter, int &method, int &mode,
 }
 //----------------------------------------------------------------
 void
-PSMath::PSNewtonLimitShift (int sign, int np, double a[],
-                            double alimit[][2], double aprec[],
-                            double daN[], double h[], double g[],
-                            double H[])
+PSMath::PSNewtonLimitShift (int sign, int np,
+    std::vector<double>& a,
+    const std::vector<std::vector<double>>& alimit,
+    const std::vector<double>& aprec,
+		std::vector<double>& daN,
+    std::vector<double>& h,
+    std::vector<double>& g,
+    const std::vector<double>& H)
 {
   // ------- for Newton Method: if close to limit shift central point by less than precision
   if (sign > 0) {
@@ -324,17 +338,23 @@ PSMath::PSNewtonLimitShift (int sign, int np, double a[],
 }
 //----------------------------------------------------------------
 double
-PSMath::PSNewtonAnalyzer (int np, double a[], double alimit[][2],
-                          double aprec[], double daN[], double h[],
-                          double g[], double H[], double Hinv[],
-                          double chi2, Bool_t noNewtonShifts, int printlevel)
+PSMath::PSNewtonAnalyzer (int np,
+    std::vector<double>& a,
+    const std::vector<std::vector<double>>& alimit,
+    const std::vector<double>& aprec,
+		std::vector<double>& daN,
+    std::vector<double>& h,
+		const std::vector<double>& g,
+    const std::vector<double>& H,
+    std::vector<double>& Hinv,
+    double chi2, bool noNewtonShifts, int printlevel)
 {
   //  cout << "   PSNewtonAnalyzer  chi2 = " << chi2 << "\n" ;
 
   double d;                    // convergence test value
   int iNewton;                 // =1 if Newton Method can be used
   double gnorm, hnorm;
-  double xlimit[2];         // straight line distance from a[] to alimits[][2]
+  std::vector<double> xlimit(2);         // straight line distance from a[] to alimits[][2]
 
   d = 100.;
   for (int ip = 0; ip < np; ip++) {
@@ -381,11 +401,11 @@ PSMath::PSNewtonAnalyzer (int np, double a[], double alimit[][2],
     }              // daN wrong since not in direction of -g
   }
 
-  // ------------- Newton not ok ------------------------ 
+  // ------------- Newton not ok ------------------------
   if (iNewton != 1 || noNewtonShifts) {
-    if (printlevel>0 && iNewton != 1){ 
+    if (printlevel>0 && iNewton != 1){
       std::cout << "PSNewton Analyzer ===== WARNING ========== H is not positive definit" << std::endl;
-      if (printlevel>4){ 
+      if (printlevel>4){
 	PSVprint( "    a      ",a     ,np) ;
 	PSM2print("    alimit ",alimit,np) ;
 	PSVprint( "    aprec  ",aprec ,np) ;
@@ -426,9 +446,9 @@ PSMath::PSNewtonAnalyzer (int np, double a[], double alimit[][2],
 
   // ------------ Newton step seems to be fine --------------
   PSLineLimit (np, a, daN, alimit, xlimit);  // get distance to limit
-  
+
   if (printlevel>0) std::cout << "daN shift for Newton in daN[0]: " << daN[0] << " daN[1]: " << daN[1] << std::endl;
-  
+
   double xmax = fmin (1., xlimit[1]); //  Newton step would lead out of limits
 
   for (int ip = 0; ip < np; ip++) {                       // apply Newton step
@@ -470,7 +490,7 @@ PSMath::PSNewtonAnalyzer (int np, double a[], double alimit[][2],
     //    PSMprint("d<0  H "  ,H,  np,np) ;
     d = 111.;
   }
-  
+
   double d2 = 0.;
   for (int ip = 0; ip < np; ip++) {
     for (int jp = 0; jp < np; jp++) {
@@ -480,16 +500,22 @@ PSMath::PSNewtonAnalyzer (int np, double a[], double alimit[][2],
 
   if (printlevel>2)
       std::cout << "daN set to: dan[0]: " << daN[0] << " daN[1]: " << daN[1] << std::endl;
-  
+
   return d;
 }
 //-------------------------------------------------------
 void
-PSMath::PSfitShow (int iloop, int convergence, int iter, int method,
-                   int mode, int printlevel, int graphiklevel, int np,
-                   double a[], double astart[], double alimit[][2],
-                   double aprec[], double daN[], double h[],
-                   double chi2, double g[], double H[])
+PSMath::PSfitShow (int iloop, int convergence, int iter, int method, int mode, int printlevel, int graphiklevel,
+		int np,
+    const std::vector<double>& a,
+    const std::vector<double>& astart,
+    const std::vector<std::vector<double>>& alimit,
+		const std::vector<double>& aprec,
+    const std::vector<double>& daN,
+    const std::vector<double>& h,
+    double chi2,
+		const std::vector<double>& g,
+    const std::vector<double>& H)
 {
   // printlevel: 0: quite mode,      1: one line with fit result
   //             2: full fit result, 3: one line per iteration, 4: more and more
@@ -611,9 +637,12 @@ PSMath::PSfitShow (int iloop, int convergence, int iter, int method,
 }
 //------------------------------------------------------------------
 double
-PSMath::PSLineSearch (int & mode, double hh, double xlimit[],
-                      double epsx, double epsf, double x[4], double f[],
-                      double chi2, int printlevel)
+PSMath::PSLineSearch (int & mode, double hh,
+    const std::vector<double>& xlimit,
+		double epsx, double epsf,
+    std::vector<double>& x,
+    std::vector<double>& f,
+		double chi2, int printlevel)
 {      // 1-dim Line-Search, Method from Blobel textbook p. 252
   static double xt, ft;
   double d31, d32, d21;
@@ -835,7 +864,7 @@ PSMath::PSLineSearch (int & mode, double hh, double xlimit[],
     double deltaChi2 = fabs(ft - f[2]);
     //    cout <<" in mode 5    xt  " << xt << "   ft " << ft << endl;
     //    PSVprint("  x ",x,4) ;
-    
+
     if (ft < f[2]) {                     // better point found: narrow intervall
       if (xt < x[2]) {
         f[3] = f[2];
@@ -870,7 +899,7 @@ PSMath::PSLineSearch (int & mode, double hh, double xlimit[],
       mode = 0;
       return x[2];
     }
-    
+
     //    if (x[3]-x[1]<epsx && f[1]-f[2]<epsf && f[3]-f[2]<epsf ) {    // CONVERGENCE reached
     d21 = x[2] - x[1];
     d31 = x[3] - x[1];
@@ -885,7 +914,7 @@ PSMath::PSLineSearch (int & mode, double hh, double xlimit[],
     //PSVprint("  x ",x,4);
     //std::cout << "   g " << g << std::endl;
     //std::cout << "   H " << H << std::endl;
-    //std::cout << "   d21 " << d21 << "   d31 " << d31 << "   d32 " 
+    //std::cout << "   d21 " << d21 << "   d31 " << d31 << "   d32 "
     //	      << d32 << "  xt " << xt << std::endl;
 
     if (fabs(x[2] - xt) < close * d31) {       // safety for numerical precision
@@ -904,15 +933,18 @@ PSMath::PSLineSearch (int & mode, double hh, double xlimit[],
 
 //------------------------------------
 void
-PSMath::PSLineLimit (int np, double astart[], double daN[],
-                     double alimit[][2], double xlimit[])
+PSMath::PSLineLimit (int np,
+    const std::vector<double>& astart,
+    const std::vector<double>& daN,
+    const std::vector<std::vector<double>>& alimit,
+    std::vector<double>& xlimit)
 {
   // calculate xlimit for line search along direction daN
   double temp0, temp1, temp;
   xlimit[0] = -pow (10.0, 10.0);
   xlimit[1] = pow (10.0, 10.0);
 
-  //  cout << "    xlimit[0] "  << xlimit[0] << "    xlimit[1] " << xlimit[1] << endl; 
+  //  cout << "    xlimit[0] "  << xlimit[0] << "    xlimit[1] " << xlimit[1] << endl;
   //  PSVprint( "PSLineLimit    astart ",astart,np) ;
   //  PSM2print("PSLineLimit    alimit ",alimit,np) ;
   for (int ip = 0; ip < np; ip++) {                // limits
@@ -930,11 +962,11 @@ PSMath::PSLineLimit (int np, double astart[], double daN[],
       xlimit[1] = fmin (xlimit[1], temp1);
     }
   }
-  //  cout << "    xlimit[0] " << xlimit[0] << "    xlimit[1] " << xlimit[1] << endl; 
+  //  cout << "    xlimit[0] " << xlimit[0] << "    xlimit[1] " << xlimit[1] << endl;
 }
 //---------------------------------
 double
-PSMath::PSVnorm (double x[], int n)
+PSMath::PSVnorm (const std::vector<double>& x, int n)
 {
   double xnorm = 0.;
   for (int i = 0; i < n; i++) {
@@ -944,7 +976,7 @@ PSMath::PSVnorm (double x[], int n)
 }
 //----------------------------------------------------------------
 void
-PSMath::PSVprint (const char* text, double x[], int n)
+PSMath::PSVprint (const char* text, const std::vector<double>& x, int n)
 {
   //  cout << "   PS Vector print  " << "  " << n << "\n" ;
   std::cout << text << "[" << n << "] = ";
@@ -956,7 +988,7 @@ PSMath::PSVprint (const char* text, double x[], int n)
 }
 //----------------------------------------------------------------
 void
-PSMath::PSMprint (const char* text, double A[], int ni, int nj)
+PSMath::PSMprint (const char* text, const std::vector<double>& A, int ni, int nj)
 {
   std::cout << text << "[" << ni << "]" << "[" << nj << "]" << "\n";
   for (int i = 0; i < ni; i++) {
@@ -969,7 +1001,7 @@ PSMath::PSMprint (const char* text, double A[], int ni, int nj)
 }
 //----------------------------------------------------------------
 void
-PSMath::PSM2print (const char* text, double A[][2], int ni)
+PSMath::PSM2print (const char* text, const std::vector<std::vector<double>>& A, int ni)
 {
   for (int i = 0; i < ni; i++) {
     std::cout << text << "[" << i << "]" << "[]";
@@ -981,7 +1013,7 @@ PSMath::PSM2print (const char* text, double A[][2], int ni)
 }
 //------------------------------------------------------------------
 double
-PSMath::PSMinverse (double H[], double Hinv[], int p)
+PSMath::PSMinverse (const std::vector<double>& H, std::vector<double>& Hinv, int p)
 {    // invert a symmetric matrix H[p,p]
   // for 2*2 and 3*3 inversion also works for a non-symmetric matrix
   if (p == 2) {
@@ -1022,19 +1054,22 @@ PSMath::PSMinverse (double H[], double Hinv[], int p)
 double
 PSMath::PSMCholtest ()
 { // test inversion of symmetric matrix via cholesky LR decomposition
-  double M[4 * 4], R[4 * 4], Rinv[4 * 4], Mtest[4 * 4];
+  std::vector<double> M(4 * 4);
+  std::vector<double> R(4 * 4);
+  std::vector<double> Rinv(4 * 4);
+  std::vector<double> Mtest(4 * 4);
   // test for  R- right triangular matrix
   //double Test1[1 * 1] = { 9. };
   //double Test2[2 * 2] = { 9., 3., 0., 5. };
   //double Test3[3 * 3] = { 9., 3., 2., 0., 5., -4., 0., 0., -9. };
-  double Test4[4 * 4] = { 9., 3., 2., 0., 0., 5., -4., 1., 0., 0., 60., -9.,
+  std::vector<double> Test4 = { 9., 3., 2., 0., 0., 5., -4., 1., 0., 0., 60., -9.,
       0., 0., 0., 40. };
 
   int n = 4;
   PSMmultiplyMT (M, Test4, n, n);
   //  for (int ii=0; ii < n ; ii++) {
   //    for (int jj=0; jj < n ; jj++) {
-  //      M[ii*n+jj] = 0. ; 
+  //      M[ii*n+jj] = 0. ;
   //      for (int kk=0; kk < n ; kk++) {
   //	M[ii*n+jj] = M[ii*n+jj] + Test[kk*n+ii] * Test[kk*n+jj] ;
   //      } ;
@@ -1066,8 +1101,9 @@ PSMath::PSMCholtest ()
 }
 //-----------------------------
 double
-PSMath::PSMmultiply (double A[], double B[], double C[], int n1,
-                     int n2)
+PSMath::PSMmultiply (std::vector<double>& A,
+    const std::vector<double>& B,
+    const std::vector<double>& C,int n1,int n2)
 { // multiply matrix  A = B * C,  Aij = Bik * Ckj,
 //  A(n1,n1)   B(n1,n2)  C(n2,n1)
   for (int ii = 0; ii < n1; ii++) {
@@ -1082,7 +1118,7 @@ PSMath::PSMmultiply (double A[], double B[], double C[], int n1,
 }
 //-----------------------------
 double
-PSMath::PSMmultiplyMRRT (double A[], int n1, int n2)
+PSMath::PSMmultiplyMRRT (std::vector<double>& A, int n1, int n2)
 {  // multiply triangular matrix R=A  with transpose,
 //  store result in input, B = R * R^T,  A = B,
 //  Aij= Bik * Bjk,  A(n1,n1)   B(n1,n2)
@@ -1104,7 +1140,7 @@ PSMath::PSMmultiplyMRRT (double A[], int n1, int n2)
 }
 //-----------------------------
 double
-PSMath::PSMmultiplyMT (double A[], double B[], int n1, int n2)
+PSMath::PSMmultiplyMT (std::vector<double>& A, const std::vector<double>& B, int n1, int n2)
 {  // multiply matrix  A = B * B^T,  Aij = Bik * Bjk,  A(n1,n1)   B(n1,n2)
   for (int ii = 0; ii < n1; ii++) {
     for (int jj = 0; jj < n1; jj++) {
@@ -1118,7 +1154,7 @@ PSMath::PSMmultiplyMT (double A[], double B[], int n1, int n2)
 }
 //-----------------------------
 double
-PSMath::PSMRTrianInvert2 (double R[], int n)
+PSMath::PSMRTrianInvert2 (std::vector<double>& R, int n)
 {  // invert a triangular R - matrix (n*n)
 //  store result in position of input (R)
   for (int ii = 0; ii < n; ii++) {
@@ -1142,7 +1178,7 @@ PSMath::PSMRTrianInvert2 (double R[], int n)
 }
 //-----------------------------
 double
-PSMath::PSMRTrianInvert (double R[], double Rinv[], int n)
+PSMath::PSMRTrianInvert (const std::vector<double>& R, std::vector<double>& Rinv,  int n)
 {  // invert a triangular R - matrix (n*n)       R * Rinv = 1
   for (int ii = 0; ii < n; ii++) {
     for (int jj = 0; jj < n; jj++) {
@@ -1167,7 +1203,7 @@ PSMath::PSMRTrianInvert (double R[], double Rinv[], int n)
 
 //-----------------------------
 double
-PSMath::PSMCholesky (double M[], double R[], int n)
+PSMath::PSMCholesky (const std::vector<double>& M, std::vector<double>& R,  int n)
 {  // Cholesky decomposition of  M = n*n  symmetric matrix
 // M = R^T * R
   for (int ii = 0; ii < n; ii++) {
@@ -1198,9 +1234,9 @@ PSMath::PSMCholesky (double M[], double R[], int n)
 }
 //----------------------------------------------------------------
 double
-PSMath::PSfitCheckLimits (int np, double a[], double h[],
-                          double alimit[][2], double aprecision[],
-                          double daN[], double g[], double d)
+PSMath::PSfitCheckLimits (int np, std::vector<double>& a, std::vector<double>& h,
+			    const std::vector<std::vector<double>>& alimit, const std::vector<double>& aprecision,
+			    std::vector<double>& daN, const std::vector<double>& g, double d)
 {
   // check limits of fit parameters
   std::cout << "PSfitCheckLimits " << std::endl;
@@ -1276,8 +1312,8 @@ PSMath::PSfitCheckLimits (int np, double a[], double h[],
 }
 //----------------------------------------------------------------
 double
-PSMath::PSminIterate (double a[], double daN[], double h[], int p,
-                      double g[], double H[], double Hinv[], double X0)
+PSMath::PSminIterate (std::vector<double>& a, std::vector<double>& daN, std::vector<double>& h, int p,
+			const std::vector<double>& g, const std::vector<double>& H, const std::vector<double>& Hinv, double X0)
 {
   //  cout << "   PSminIterate  X0 = " << X0 << "\n" ;
 
@@ -1343,8 +1379,8 @@ PSMath::PSminIterate (double a[], double daN[], double h[], int p,
 }
 //----------------------------------------------------------------
 double
-PSMath::PSfuncQuadratic (double a[], double amean[], double F0,
-                         double g[], double H[], int np)
+PSMath::PSfuncQuadratic (const std::vector<double>& a, const std::vector<double>& amean, double F0,
+			   const std::vector<double>& g, const std::vector<double>& H, int np)
 {   // compute multi-dim quadratic function from mean, derivative and Hesse
   double F = F0;
   //  cout << F << "\n" ;
@@ -1362,8 +1398,8 @@ PSMath::PSfuncQuadratic (double a[], double amean[], double F0,
   return F;
 }
 //----------------------------------------------------------------
-int PSMath::PSderivative1 (int icall, double a[], double h[],
-		      double F, double g[], double H[])
+int PSMath::PSderivative1 (int icall, std::vector<double>& a, const std::vector<double>& h,
+			       double F, std::vector<double>& g, std::vector<double>& H)
 {
   // 1-dim case of PSderivative,  see documentation there
   // g,H will contain derivative and second derivative of F(a)
@@ -1376,7 +1412,7 @@ int PSMath::PSderivative1 (int icall, double a[], double h[],
   int ready = -1 ;
   iter  = icall / nstep ;
   icalc = icall - iter * nstep ;
-  if (icalc == 0)  { 
+  if (icalc == 0)  {
     a[0] = a[0] + h[0];
   } else if (icalc == 1) {
     a[0] = a[0] - 2.* h[0] ;
@@ -1386,13 +1422,13 @@ int PSMath::PSderivative1 (int icall, double a[], double h[],
 
   if (icalc == 0 ) {
     g[0] = 0.     ;        // build up derivative
-    H[0] = -2.*F  ;        // build up Hesse 
+    H[0] = -2.*F  ;        // build up Hesse
   } else if (icalc == 1) {
     g[0] = g[0] + F  ;        // build up derivative
-    H[0] = H[0] + F  ;        // build up Hesse 
+    H[0] = H[0] + F  ;        // build up Hesse
   } else if (icalc == 2) {
     g[0] = g[0] - F  ;        // build up derivative
-    H[0] = H[0] + F  ;        // build up Hesse 
+    H[0] = H[0] + F  ;        // build up Hesse
     g[0] = g[0] / (2.*h[0]) ;    // at last step: divide by step width
     H[0] = H[0] / pow(h[0],2) ;      // at last step: divide by step width
     ready = 1 ;
@@ -1401,9 +1437,9 @@ int PSMath::PSderivative1 (int icall, double a[], double h[],
 }
 //----------------------------------------------------------------
 int
-PSMath::PSderivative (int icall, int np, double a[], double h[],
-                      double chi2, double chi2iter[], double g[],
-                      double H[], int printlevel)
+PSMath::PSderivative (int icall, int np, std::vector<double>& a, const std::vector<double>& h,
+			  double chi2, std::vector<double>& chi2iter,
+			  std::vector<double>& g, std::vector<double>& H, int printlevel)
 {
   // Tool for numerical calculation of derivative and Hesse matrix
   //  depending on icall, the components of a[] are shifted up and down.
@@ -1421,7 +1457,7 @@ PSMath::PSderivative (int icall, int np, double a[], double h[],
   //                                 //     (i.e. no shift of a[])
   //  double g[4] ;                 //  derivative vector  g[np]
   //  double H[4*4] ;               //  Hesse matrix       H[np*np]
-  //                                 //  g[] and H[] are also used as 
+  //                                 //  g[] and H[] are also used as
   //                                 //    intermediate storage of chi2
   //     icall = 0             for nominal a[]
   //     icall = 1...np        for + shift of a
@@ -1446,14 +1482,14 @@ PSMath::PSderivative (int icall, int np, double a[], double h[],
   int shiftp2 = shiftp1 + np - 1;                                       //2
   int shiftm1 = shiftp2 + 1;                                            //3
   int shiftm2 = shiftm1 + np - 1;                                       //4
-  //int shiftpp1 = shiftm2 + 1;                                           
+  //int shiftpp1 = shiftm2 + 1;
   int shiftpp2 = shiftm2 + np * (np - 1) / 2;                           //5
-  //int shiftmm1 = shiftpp2 + 1;                                          
+  //int shiftmm1 = shiftpp2 + 1;
   int shiftmm2 = shiftpp2 + np * (np - 1) / 2;                          //6
 
   iter = icall / nstep;
   icalc = icall - iter * nstep;
-  
+
   int iaold = -1;
   //int ia1old = -;
   int iaiold = -1, iajold = -1;
@@ -1565,7 +1601,7 @@ PSMath::PSderivative (int icall, int np, double a[], double h[],
       signnew = -1.;
     };
   }
-  else if (icalc == shiftmm2) 
+  else if (icalc == shiftmm2)
   {  // cout <<" Hesse -- end   "<< chi2 << "\n" ;
     iaiold = np - 2;
     iajold = np - 1;
@@ -1647,9 +1683,9 @@ PSMath::PSderivative (int icall, int np, double a[], double h[],
 }
 //----------------------------------------------------------------
 double
-PSMath::PSfitMinStep (int np, double a[], double h[], double chi2iter[],
-                      double g[], double H[], double Hinv[],
-                      double daN[])
+PSMath::PSfitMinStep (int np, std::vector<double>& a, std::vector<double>& h,
+			const std::vector<double>& chi2iter,
+			const std::vector<double>& g, const std::vector<double>& H, std::vector<double>& Hinv, std::vector<double>& daN)
 {
   // calcuate Newton Step for minimisation
 
@@ -1670,11 +1706,10 @@ PSMath::PSfitMinStep (int np, double a[], double h[], double chi2iter[],
 }
 //----------------------------------------------------------------
 int
-PSMath::PSfitconstrain0 (double F, double g, double H, double Fix,
-                         double aix[])
+PSMath::PSfitconstrain0 (double F, double g, double H, double Fix, std::vector<double>& aix)
 {
   //  constrain function F(a) with derivative g(a) and 2nd derivative H(a)
-  //  The result assumes a quadratic function 
+  //  The result assumes a quadratic function
   //  to Fix = F + g * a + 1/2 * H * a^2
   //  result: The (in general) two solutions are turned in aix[0] and aix[1]
   //  return = number of solutions (0,1,2)
